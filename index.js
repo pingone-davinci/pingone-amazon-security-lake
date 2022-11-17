@@ -40,7 +40,7 @@ const convertToOCSF = async (pingOneEvents) => {
                 "environment": pingOneEvent.actors.user.environment.id
               },
               "dst_endpoint": {
-                "svc_name": pingOneEvent.actors.client.name  // Region specifc ?
+                "svc_name": pingOneEvent.actors.client.name  // Region specifc
               },
               "logon_type": "Network",
               "logon_type_id": 3,
