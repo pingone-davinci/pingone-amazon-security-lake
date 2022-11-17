@@ -292,7 +292,7 @@ const convertToOCSF = async (pingOneEvents) => {
               "status_id": statusId, // 1 for success, 2 for failure, 0 for unknown
               "time": timestamp, 
               "timezone_offset": timezone_offset, 
-              "type_name": "Account Change: Create",  
+              "type_name": "Account Change: Delete",  
               "type_uid": 300106,
               "user": {
                 "name": pingOneEvent.resources[0].name, // resources[0].name
