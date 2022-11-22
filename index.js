@@ -691,7 +691,20 @@ function getEventHour(date) {
 
 exports.handler = async (event) => {
 
-  let pingOneEvent;
+  const base64Credentials =  event.headers.authorization.split(' ')[1];
+  const credentials = Buffer.from(base64Credentials, 'base64').toString('ascii');
+  const [username, password] = credentials.split(':');
+
+  if(username !== process.env.USERNAME || password !== process.env.PASSWORD) {
+    console.error('Invalid credentials')
+
+    return {
+      statusCode: 403,
+      body: {
+        err_msg: "Invalid credentials"
+      }
+    }
+  }
 
   // For testing purposes
   if (event.body) {
@@ -707,7 +720,7 @@ exports.handler = async (event) => {
     return { statusCode: 200 };
 
   } catch (err) {
-    console.log(err);
+    console.error(err);
 
     const error = {
       err_msg: err
