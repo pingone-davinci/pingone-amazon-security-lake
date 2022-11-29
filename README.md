@@ -85,24 +85,24 @@ After the configuration has been completed, PingOne authentication, password res
 
 ##### Authentication Activity
 
-![Authentication Activity](image9.png)
+![Authentication Activity](images/image9.png)
 
 ##### Password Reset / Recovery
 
-![Password Reset Activity](image6.png)
+![Password Reset Activity](images/image6.png)
 
 
 ##### User Create
 
-![Account Create Activity](image5.png)
+![Account Create Activity](images/image5.png)
 
 
 ##### User Update
 
-![Account Change Activity](image3.png)
+![Account Change Activity](images/image3.png)
 
 
 
 ##### User Delete
 
-![Account Delete Activity](image7.png)
+![Account Delete Activity](images/image7.png)
