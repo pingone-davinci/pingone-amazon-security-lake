@@ -6,7 +6,7 @@
 AWS Security Lake is a data lake for security logs, built in the customer’s account. The data lake is backed by an S3 bucket, and organizes data as a set of AWS Lake Formation tables. AWS Security Lake is designed to optimize the cost of storing and querying massive security log sources, while maintaining good query performance and compatibility with a wide variety of analytic infrastructure. AWS Security Lake
 customers retain low-level ownership of their data. AWS Security Lake also delivers a set of core AWS-native security logs, minimizing costs and maximizing performance.
 
-![AWS Security Lake](2022-security-lake-1.jpeg)
+![AWS Security Lake](images/2022-security-lake-1.jpeg)
 
 ### Open Cybersecurity Schema Framework (OCSF)
 Core to the AWS Security Lake mission is simplifying the storage, retrieval, and consumption of security logs through application of a common schema. The Open Cybersecurity Schema Framework (OCSF) is a collaborative open-source effort between AWS and partners. OCSF includes syntax and semantics for common security log events, defines versioning criteria to facilitate schema evolution, and includes a self-governance process to be maximally inclusive of security log producers and consumers. OCSF source code is homed on Github, and is released under the Apache License version 2.0.
@@ -43,7 +43,7 @@ Core to the AWS Security Lake mission is simplifying the storage, retrieval, and
 | **SOURCE_LOCATION**   | Is the location provided by AWS Security Lake when registering the custom source       |
 | **USERNAME**   | The PingOne Webhook basic authentication username        |
 
-![Env Variable Example](image8.png)
+![Env Variable Example](images/image8.png)
 
 2. Create a Function URL under Lambda > Functions > Configuration > Function URL with the following details:
     - **Auth type**: NONE
@@ -58,7 +58,7 @@ Core to the AWS Security Lake mission is simplifying the storage, retrieval, and
     - **Headers**: Basic Authentication 
        - Enter the username and password selected above in the AWS Lambda configuration
 
-![PingOne Webhooks](image2.png)
+![PingOne Webhooks](images/image2.png)
 
    - **Event Types**: 
       - Flow Completed
@@ -69,7 +69,7 @@ Core to the AWS Security Lake mission is simplifying the storage, retrieval, and
       - User Deleted
       - User Updated
 
-![Event Types](image1.png)
+![Event Types](images/image1.png)
 
 5. Finally, click Save. 
 
