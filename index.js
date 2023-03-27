@@ -32,8 +32,6 @@ const convertToOCSF = async (pingOneEvents) => {
         statusId = 1;
       } else if (pingOneEvent.result.status === 'FAILED') {
         statusId = 2;
-      } else {
-        statusId = -1;
       }
 
       const isoStr = pingOneEvent.recordedAt;
@@ -162,8 +160,6 @@ const convertToOCSF = async (pingOneEvents) => {
         statusId = 1;
       } else if (pingOneEvent.result.status === 'FAILED') {
         statusId = 2;
-      } else {
-        statusId = -1;
       }
 
       const isoStr = pingOneEvent.recordedAt;
@@ -180,10 +176,15 @@ const convertToOCSF = async (pingOneEvents) => {
         "category_uid": 3,
         "class_name": "Account Change",
         "class_uid": 3001,
-        "cloud": {
-          "provider": "PingOne",
-          "region": process.env.REGION,
-          "account_uid": pingOneEvent.resources[0].environment.id
+        "actor": {
+          "idp": {
+            "name": "PingOne",
+            "uid": pingOneEvent.resources[0].environment.id
+          },
+          "user":  {
+            "name": pingOneEvent.resources[0].name, // resources[0].name
+            "uid": pingOneEvent.resources[0].id, // resources[0].id
+          } 
         },
         "message": pingOneEvent?.action?.type,
         "metadata": {
@@ -275,8 +276,6 @@ const convertToOCSF = async (pingOneEvents) => {
         statusId = 1;
       } else if (pingOneEvent.result.status === 'FAILED') {
         statusId = 2;
-      } else {
-        statusId = -1;
       }
 
       const isoStr = pingOneEvent.recordedAt;
@@ -388,8 +387,6 @@ const convertToOCSF = async (pingOneEvents) => {
         statusId = 1;
       } else if (pingOneEvent.result.status === 'FAILED') {
         statusId = 2;
-      } else {
-        statusId = -1;
       }
 
       const isoStr = pingOneEvent.recordedAt;
@@ -501,8 +498,6 @@ const convertToOCSF = async (pingOneEvents) => {
         statusId = 1;
       } else if (pingOneEvent.result.status === 'FAILED') {
         statusId = 2;
-      } else {
-        statusId = -1;
       }
 
       const isoStr = pingOneEvent.recordedAt;
