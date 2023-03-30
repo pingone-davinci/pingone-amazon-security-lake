@@ -21,10 +21,9 @@ const convertToOCSF = async (pingOneEvents) => {
     console.log(`Processing PingOne event type: ${pingOneEvent?.action?.type}`);
 
     /*
-      Authentication event 
+      Authentication success event 
     */
-    if (pingOneEvent?.action?.type === 'FLOW.DELETED' ||
-      pingOneEvent?.action?.type === 'FLOW.UPDATED') {
+    if (pingOneEvent?.action?.type === 'FLOW.DELETED') {
 
       let statusId = 0;
 
@@ -48,16 +47,21 @@ const convertToOCSF = async (pingOneEvents) => {
         "category_uid": 3,
         "class_name": "Authentication",
         "class_uid": 3002,
-        "cloud": {
-          "provider": "PingOne",
-          "region": process.env.REGION,
-          "account_uid": pingOneEvent.resources[0].environment.id
-        },
+        "actor": {
+          "idp": {
+            "name": "PingOne",
+            "uid": pingOneEvent.resources[0].environment.id
+          },
+          "user":  {
+            "name": pingOneEvent.resources[0].name, // resources[0].name
+            "uid": pingOneEvent.resources[0].id, // resources[0].id
+          } 
+        },        
         "dst_endpoint": {
           "svc_name": pingOneEvent.actors.client.name
         },
         "logon_type": "Network",
-        "logon_type_id": 3,
+        "logon_type_id": 99,
         "message": pingOneEvent?.action?.type,
         "metadata": {
           "correlation_uid": pingOneEvent.resources[0].id,
@@ -93,12 +97,23 @@ const convertToOCSF = async (pingOneEvents) => {
         category_uid: { type: 'INT32' },
         class_name: { type: 'UTF8' },
         class_uid: { type: 'INT32' },
-        cloud: {
+        actor: {
           repeated: false,
           fields: {
-            provider: { type: 'UTF8' },
-            region: { type: 'UTF8' },
-            account_uid: { type: 'UTF8' },
+            idp: {
+              repeated: false,
+              fields: {
+                name: { type: 'UTF8' },
+                uid: { type: 'UTF8' },
+              }
+            }, 
+            user: {
+              repeated: false,
+              fields: {
+                name: { type: 'UTF8' },
+                uid: { type: 'UTF8' },
+              }
+            }
           }
         },
         dst_endpoint: {
@@ -149,9 +164,284 @@ const convertToOCSF = async (pingOneEvents) => {
 
 
       /*
-        Password Reset & Recovery Event 
+        Authentication failure event 
       */
-    } else if (pingOneEvent?.action?.type === 'PASSWORD.RESET' ||
+    } else if (pingOneEvent?.action?.type === 'FLOW.UPDATED') {
+
+        if (pingOneEvent.result.status === 'FAILED') {
+          statusId = 2;
+        } else {
+          // Skip FLOW.UPDATED success events as they do not mean an authentication failure
+          continue;
+        }
+  
+        const isoStr = pingOneEvent.recordedAt;
+        const date = new Date(isoStr);
+        const timestamp = date.getTime();
+        const timezone_offset = date.getTimezoneOffset();
+  
+        event_type_uid = 300201;
+  
+        ocsfEvent = {
+          "activity_id": 1,
+          "auth_protocol_id": 0,
+          "category_name": "Audit Activity",
+          "category_uid": 3,
+          "class_name": "Authentication",
+          "class_uid": 3002,
+          "actor": {
+            "idp": {
+              "name": "PingOne",
+              "uid": pingOneEvent.resources[0].environment.id
+            },
+            "user":  {
+              "name": pingOneEvent.resources[0].name, // resources[0].name
+              "uid": pingOneEvent.resources[0].id, // resources[0].id
+            } 
+          },        
+          "dst_endpoint": {
+            "svc_name": pingOneEvent.actors.client.name
+          },
+          "logon_type": "Network",
+          "logon_type_id": 99,
+          "message": pingOneEvent?.action?.type,
+          "metadata": {
+            "correlation_uid": pingOneEvent.resources[0].id,
+            "uid": pingOneEvent.id, // id
+            "original_time": pingOneEvent.recordedAt, // recordedAt
+            "product": {
+              "lang": "en",
+              "name": "PingOne",
+              "vendor_name": "Ping Identity"
+            },
+            "version": "1.0.0"
+          },
+          "severity": "Informational",
+          "severity_id": 1,
+          "status": pingOneEvent.result.status, // result
+          "status_detail": pingOneEvent.result.description, // result.description
+          "status_id": statusId, // 1 for success, 2 for failure, 0 for unknown
+          "time": timestamp,
+          "timezone_offset": timezone_offset,
+          "type_name": "Authentication: Logon",
+          "type_uid": event_type_uid,
+          "user": {
+            "name": pingOneEvent.resources[0].name, // user.name
+            "uid": pingOneEvent.resources[0].id, // user.id
+            "org_uid": pingOneEvent.resources[0].environment.id // user.environment.id
+          }
+        }
+  
+        schemaEvent = new parquet.ParquetSchema({
+          activity_id: { type: 'INT32' },
+          auth_protocol_id: { type: 'INT32' },
+          category_name: { type: 'UTF8' },
+          category_uid: { type: 'INT32' },
+          class_name: { type: 'UTF8' },
+          class_uid: { type: 'INT32' },
+          actor: {
+            repeated: false,
+            fields: {
+              idp: {
+                repeated: false,
+                fields: {
+                  name: { type: 'UTF8' },
+                  uid: { type: 'UTF8' },
+                }
+              }, 
+              user: {
+                repeated: false,
+                fields: {
+                  name: { type: 'UTF8' },
+                  uid: { type: 'UTF8' },
+                }
+              }
+            }
+          },
+          dst_endpoint: {
+            repeated: false,
+            fields: {
+              svc_name: { type: 'UTF8' },
+            },
+          },
+          logon_type: { type: 'UTF8' },
+          logon_type_id: { type: 'INT32' },
+          message: { type: 'UTF8' },
+          metadata: {
+            repeated: false,
+            fields: {
+              correlation_uid: { type: 'UTF8' },
+              uid: { type: 'UTF8' },
+              original_time: { type: 'UTF8' },
+              product: {
+                repeated: false,
+                fields: {
+                  lang: { type: 'UTF8' },
+                  name: { type: 'UTF8' },
+                  vendor_name: { type: 'UTF8' },
+                }
+              },
+              version: { type: 'UTF8' }
+            }
+          },
+          severity: { type: 'UTF8' },
+          severity_id: { type: 'INT32' },
+          status: { type: 'UTF8' },
+          status_detail: { type: 'UTF8' },
+          status_id: { type: 'INT32' },
+          time: { type: 'INT64' },
+          timezone_offset: { type: 'INT32' },
+          type_name: { type: 'UTF8' },
+          type_uid: { type: 'INT32' },
+          user: {
+            repeated: false,
+            fields: {
+              name: { type: 'UTF8' },
+              uid: { type: 'UTF8' },
+              org_uid: { type: 'UTF8' },
+            }
+          },
+        });
+ 
+      /*
+        Authentication failure event 
+      */
+      } else if (pingOneEvent?.action?.type === 'PASSWORD.CHECK_FAILED') {
+  
+        const isoStr = pingOneEvent.recordedAt;
+        const date = new Date(isoStr);
+        const timestamp = date.getTime();
+        const timezone_offset = date.getTimezoneOffset();
+  
+        event_type_uid = 300201;
+  
+        ocsfEvent = {
+          "activity_id": 1,
+          "auth_protocol_id": 0,
+          "category_name": "Audit Activity",
+          "category_uid": 3,
+          "class_name": "Authentication",
+          "class_uid": 3002,
+          "actor": {
+            "idp": {
+              "name": "PingOne",
+              "uid": pingOneEvent.resources[0].environment.id
+            },
+            "user":  {
+              "name": pingOneEvent.resources[0].name, // resources[0].name
+              "uid": pingOneEvent.resources[0].id, // resources[0].id
+            } 
+          },        
+          "dst_endpoint": {
+            "svc_name": "PingOne"
+          },
+          "logon_type": "Network",
+          "logon_type_id": 99,
+          "message": pingOneEvent?.action?.type,
+          "metadata": {
+            "correlation_uid": pingOneEvent.resources[0].id,
+            "uid": pingOneEvent.id, // id
+            "original_time": pingOneEvent.recordedAt, // recordedAt
+            "product": {
+              "lang": "en",
+              "name": "PingOne",
+              "vendor_name": "Ping Identity"
+            },
+            "version": "1.0.0"
+          },
+          "severity": "Informational",
+          "severity_id": 1,
+          "status": "FAILED", // Result from PASSWORD.CHECK_FAILED is actually SUCCESS 
+          "status_detail": pingOneEvent.result.description, // result.description
+          "status_id": 2, // 1 for success, 2 for failure, 0 for unknown
+          "time": timestamp,
+          "timezone_offset": timezone_offset,
+          "type_name": "Authentication: Logon",
+          "type_uid": event_type_uid,
+          "user": {
+            "name": pingOneEvent.resources[0].name, // user.name
+            "uid": pingOneEvent.resources[0].id, // user.id
+            "org_uid": pingOneEvent.resources[0].environment.id // user.environment.id
+          }
+        }
+  
+        schemaEvent = new parquet.ParquetSchema({
+          activity_id: { type: 'INT32' },
+          auth_protocol_id: { type: 'INT32' },
+          category_name: { type: 'UTF8' },
+          category_uid: { type: 'INT32' },
+          class_name: { type: 'UTF8' },
+          class_uid: { type: 'INT32' },
+          actor: {
+            repeated: false,
+            fields: {
+              idp: {
+                repeated: false,
+                fields: {
+                  name: { type: 'UTF8' },
+                  uid: { type: 'UTF8' },
+                }
+              }, 
+              user: {
+                repeated: false,
+                fields: {
+                  name: { type: 'UTF8' },
+                  uid: { type: 'UTF8' },
+                }
+              }
+            }
+          },
+          dst_endpoint: {
+            repeated: false,
+            fields: {
+              svc_name: { type: 'UTF8' },
+            },
+          },
+          logon_type: { type: 'UTF8' },
+          logon_type_id: { type: 'INT32' },
+          message: { type: 'UTF8' },
+          metadata: {
+            repeated: false,
+            fields: {
+              correlation_uid: { type: 'UTF8' },
+              uid: { type: 'UTF8' },
+              original_time: { type: 'UTF8' },
+              product: {
+                repeated: false,
+                fields: {
+                  lang: { type: 'UTF8' },
+                  name: { type: 'UTF8' },
+                  vendor_name: { type: 'UTF8' },
+                }
+              },
+              version: { type: 'UTF8' }
+            }
+          },
+          severity: { type: 'UTF8' },
+          severity_id: { type: 'INT32' },
+          status: { type: 'UTF8' },
+          status_detail: { type: 'UTF8' },
+          status_id: { type: 'INT32' },
+          time: { type: 'INT64' },
+          timezone_offset: { type: 'INT32' },
+          type_name: { type: 'UTF8' },
+          type_uid: { type: 'INT32' },
+          user: {
+            repeated: false,
+            fields: {
+              name: { type: 'UTF8' },
+              uid: { type: 'UTF8' },
+              org_uid: { type: 'UTF8' },
+            }
+          },
+        });      
+  
+  
+        /*
+          Password Reset & Recovery Event 
+        */
+      } 
+      else if (pingOneEvent?.action?.type === 'PASSWORD.RESET' ||
       pingOneEvent?.action?.type === 'PASSWORD.RECOVERY') {
 
       let statusId = 0;
@@ -220,12 +510,23 @@ const convertToOCSF = async (pingOneEvents) => {
         category_uid: { type: 'INT32' },
         class_name: { type: 'UTF8' },
         class_uid: { type: 'INT32' },
-        cloud: {
+        actor: {
           repeated: false,
           fields: {
-            provider: { type: 'UTF8' },
-            region: { type: 'UTF8' },
-            account_uid: { type: 'UTF8' },
+            idp: {
+              repeated: false,
+              fields: {
+                name: { type: 'UTF8' },
+                uid: { type: 'UTF8' },
+              }
+            }, 
+            user: {
+              repeated: false,
+              fields: {
+                name: { type: 'UTF8' },
+                uid: { type: 'UTF8' },
+              }
+            }
           }
         },
         message: { type: 'UTF8' },
@@ -292,10 +593,15 @@ const convertToOCSF = async (pingOneEvents) => {
         "category_uid": 3,
         "class_name": "Account Change",
         "class_uid": 3001,
-        "cloud": {
-          "provider": "PingOne",
-          "region": process.env.REGION,
-          "account_uid": pingOneEvent.resources[0].environment.id
+        "actor": {
+          "idp": {
+            "name": "PingOne",
+            "uid": pingOneEvent.resources[0].environment.id
+          },
+          "user":  {
+            "name": pingOneEvent.resources[0].name, // resources[0].name
+            "uid": pingOneEvent.resources[0].id, // resources[0].id
+          } 
         },
         "message": pingOneEvent?.action?.type,
         "metadata": {
@@ -331,12 +637,23 @@ const convertToOCSF = async (pingOneEvents) => {
         category_uid: { type: 'INT32' },
         class_name: { type: 'UTF8' },
         class_uid: { type: 'INT32' },
-        cloud: {
+        actor: {
           repeated: false,
           fields: {
-            provider: { type: 'UTF8' },
-            region: { type: 'UTF8' },
-            account_uid: { type: 'UTF8' },
+            idp: {
+              repeated: false,
+              fields: {
+                name: { type: 'UTF8' },
+                uid: { type: 'UTF8' },
+              }
+            }, 
+            user: {
+              repeated: false,
+              fields: {
+                name: { type: 'UTF8' },
+                uid: { type: 'UTF8' },
+              }
+            }
           }
         },
         message: { type: 'UTF8' },
@@ -403,10 +720,15 @@ const convertToOCSF = async (pingOneEvents) => {
         "category_uid": 3,
         "class_name": "Account Change",
         "class_uid": 3001,
-        "cloud": {
-          "provider": "PingOne",
-          "region": process.env.REGION,
-          "account_uid": pingOneEvent.resources[0].environment.id
+        "actor": {
+          "idp": {
+            "name": "PingOne",
+            "uid": pingOneEvent.resources[0].environment.id
+          },
+          "user":  {
+            "name": pingOneEvent.resources[0].name, // resources[0].name
+            "uid": pingOneEvent.resources[0].id, // resources[0].id
+          } 
         },
         "message": pingOneEvent?.action?.type,
         "metadata": {
@@ -442,12 +764,23 @@ const convertToOCSF = async (pingOneEvents) => {
         category_uid: { type: 'INT32' },
         class_name: { type: 'UTF8' },
         class_uid: { type: 'INT32' },
-        cloud: {
+        actor: {
           repeated: false,
           fields: {
-            provider: { type: 'UTF8' },
-            region: { type: 'UTF8' },
-            account_uid: { type: 'UTF8' },
+            idp: {
+              repeated: false,
+              fields: {
+                name: { type: 'UTF8' },
+                uid: { type: 'UTF8' },
+              }
+            }, 
+            user: {
+              repeated: false,
+              fields: {
+                name: { type: 'UTF8' },
+                uid: { type: 'UTF8' },
+              }
+            }
           }
         },
         message: { type: 'UTF8' },
@@ -514,10 +847,15 @@ const convertToOCSF = async (pingOneEvents) => {
         "category_uid": 3,
         "class_name": "Account Change",
         "class_uid": 3001,
-        "cloud": {
-          "provider": "PingOne",
-          "region": process.env.REGION,
-          "account_uid": pingOneEvent.resources[0].environment.id
+        "actor": {
+          "idp": {
+            "name": "PingOne",
+            "uid": pingOneEvent.resources[0].environment.id
+          },
+          "user":  {
+            "name": pingOneEvent.resources[0].name, // resources[0].name
+            "uid": pingOneEvent.resources[0].id, // resources[0].id
+          } 
         },
         "message": pingOneEvent?.action?.type,
         "metadata": {
@@ -553,12 +891,23 @@ const convertToOCSF = async (pingOneEvents) => {
         category_uid: { type: 'INT32' },
         class_name: { type: 'UTF8' },
         class_uid: { type: 'INT32' },
-        cloud: {
+        actor: {
           repeated: false,
           fields: {
-            provider: { type: 'UTF8' },
-            region: { type: 'UTF8' },
-            account_uid: { type: 'UTF8' },
+            idp: {
+              repeated: false,
+              fields: {
+                name: { type: 'UTF8' },
+                uid: { type: 'UTF8' },
+              }
+            }, 
+            user: {
+              repeated: false,
+              fields: {
+                name: { type: 'UTF8' },
+                uid: { type: 'UTF8' },
+              }
+            }
           }
         },
         message: { type: 'UTF8' },
