@@ -8,21 +8,53 @@ Amazon Security Lake automatically centralizes security data from cloud, on-prem
 ### Open Cybersecurity Schema Framework (OCSF)
 Core to the Amazon Security Lake mission is simplifying the storage, retrieval, and consumption of security logs through application of a common schema. The Open Cybersecurity Schema Framework (OCSF) is a collaborative open-source effort between AWS and partners. OCSF includes syntax and semantics for common security log events, defines versioning criteria to facilitate schema evolution, and includes a self-governance process to be maximally inclusive of security log producers and consumers. OCSF source code is homed on Github, and is released under the Apache License version 2.0.
 
+
+### PingOne Audit events to Amazon Security Lake
+
+PingOne Audit events can be converted to OCSF events and Parquet format using the AWS Lambda Node.JS script available here: [https://github.com/pingone-davinci/pingone-amazon-security-lake]
+
+The diagram below illustrates the process of converting the PingOne Audit events to OCSF events and to Parquet format for Amazon Security Lake:
+
+
+![PingOne Amazon Security Lake](images/pingone_amazon_security_lake.png)
+
+
 ## Requirements
 * PingOne Tenant
-* AWS Lambda Function using index.js from [https://github.com/pingone-davinci/pingone-amazon-security-lake]
-* AWS S3 (Two Buckets) 
 * Amazon Security Lake 
+* Two AWS accounts, one to execute the AWS Lambda function and one for Amazon Security Lake.
+* AWS Lambda Function using index.js from [https://github.com/pingone-davinci/pingone-amazon-security-lake]
+* Two S3 buckets must be used.  The first S3 bucket is for the OCSF events which must exist in the same AWS account as the AWS Lambda and the other is the Custom Source S3 bucket for Amazon Security Lake.
 
 ## Before you begin
-* In the AWS console:
-  * Create two S3 buckets to store the OCSF events, for example:
-    * Temporary (JSON): pingone-aws-lake-demo-ocsf
-    * Output (Parquet): pingone-aws-lake-demo-parquet
+* From the AWS Console using the AWS Account for the AWS Lambda:
+  * Create one S3 bucket to store the OCSF event, for example:
+    * Temporary (JSON): pingone-aws-lake-demo-ocsf    
   * Create new AWS Lambda function
     * Select Node.js 16.x as the runtime
     * Configure the runtime to have 512MB of memory and 1 minute timeout
     * Download the index.js and package.json from https://github.com/pingone-davinci/pingone-amazon-security-lake and create a zip deployment package as per the AWS Lambda documentation here (https://docs.aws.amazon.com/lambda/latest/dg/nodejs-package.html)
+* From the AWS Console using the AWS Account Amazon Security Lake:
+  * Create a Custom Source within Security Lake as per the following guide: https://docs.aws.amazon.com/security-lake/latest/userguide/custom-sources.html
+  * For the S3 bucket associated with the Custom Source, grant Assume Role permission to the AWS Account which will be executing above AWS Lambda using a policy as such as: 
+
+
+```
+{
+    "Version": "2012-10-17",
+    "Statement": [
+        {
+
+            "Sid": "1",
+            "Effect": "Allow",
+            "Principal": {
+                "AWS": "arn:aws:iam::<AWS Account ID executing the AWS Lambda>:root" t
+            },
+            "Action": "sts:AssumeRole"
+        }
+    ]
+}
+```
 
 
 ## Steps
