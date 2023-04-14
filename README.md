@@ -52,7 +52,7 @@ The diagram below illustrates the process of converting the PingOne Audit events
             "Sid": "1",
             "Effect": "Allow",
             "Principal": {
-                "AWS": "arn:aws:iam::<**Lambda AWS Account ID**>:root" t
+                "AWS": "arn:aws:iam::<Lambda AWS Account ID>:root" t
             },
             "Action": "sts:AssumeRole"
         }
@@ -94,7 +94,7 @@ This will allow the AWS Lambda in the **Lambda AWS Account** to write files to t
     "Statement": {
         "Effect": "Allow",
         "Action": "sts:AssumeRole",
-        "Resource": "arn:aws:iam::<**Security Lake AWS Account ID**>:role/AmazonSecurityLake-Provider-PingOne-us-east-1"
+        "Resource": "arn:aws:iam::<Security Lake AWS Account ID>:role/AmazonSecurityLake-Provider-PingOne-us-east-1"
     }
 }
 ```
