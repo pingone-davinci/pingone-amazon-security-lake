@@ -1007,16 +1007,44 @@ const convertToOCSF = async (pingOneEvents) => {
 
     const fileContents = fs.readFileSync('/tmp/auth.parquet');
 
+    // assumeRole to destination S3 bucket
+    aws.config.update({region: process.env.REGION});
+
+    // Role data
+    var roleToAssume = {RoleArn: process.env.EXTERNAL_ROLE_ARN,
+                        ExternalId: process.env.EXTERNAL_ID,
+                        RoleSessionName: 'PingOne_SecurityLake_Session',
+                        DurationSeconds: 900};
+
+    console.log("Role to Assume: ", roleToAssume);
+
+    // Create the STS service object    
+    var sts = new aws.STS({apiVersion: '2011-06-15'});
+
+    const assumeRole = await sts.assumeRole(roleToAssume).promise();
+    console.log('Role assumed successfully');
+
+    const s3params = {
+      apiVersion: '2006-03-01',
+      accessKeyId: assumeRole.Credentials.AccessKeyId,
+      secretAccessKey: assumeRole.Credentials.SecretAccessKey,
+      sessionToken: assumeRole.Credentials.SessionToken,
+    };
+
+    const s3_assumed_role = new aws.S3(s3params);
+
     const parquetKey = `${event_type_uid}_${roundedDate.toJSON()}`;
-    const parquetFullKey = `${process.env.SOURCE_LOCATION}/region=${process.env.REGION}/accountId=${process.env.ACCOUNT_ID}/eventHour=${eventHour}/${parquetKey}.parquet`;
+    const parquetFullKey = `ext/${process.env.SOURCE_LOCATION}/region=${process.env.REGION}/accountId=${process.env.ACCOUNT_ID}/eventHour=${eventHour}/${parquetKey}.parquet`;
 
     const uploadParams = {
-      Bucket: process.env.S3_BUCKET_PARQUET,
+      Bucket: process.env.EXTERNAL_S3_BUCKET_PARQUET,
       Key: parquetFullKey,
       Body: fileContents,
     };
 
-    await s3.upload(uploadParams).promise();
+    await s3_assumed_role.upload(uploadParams).promise();
+
+    console.log(`File ${parquetFullKey} successfully written to S3 bucket ${process.env.EXTERNAL_S3_BUCKET_PARQUET}`);
   }
 }
 
@@ -1032,14 +1060,13 @@ function getEventHour(date) {
   ].join('');
 }
 
-
 exports.handler = async (event) => {
 
   const base64Credentials =  event.headers.authorization.split(' ')[1];
   const credentials = Buffer.from(base64Credentials, 'base64').toString('ascii');
   const [username, password] = credentials.split(':');
 
-  if(username !== process.env.USERNAME || password !== process.env.PASSWORD) {
+  if(username !== process.env.WEBHOOK_USERNAME || password !== process.env.WEBHOOK_PASSWORD) {
     console.error('Invalid credentials')
 
     return {
@@ -1049,6 +1076,7 @@ exports.handler = async (event) => {
       }
     }
   }
+
 
   // For testing purposes
   if (event.body) {
