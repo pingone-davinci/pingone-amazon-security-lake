@@ -76,7 +76,7 @@ This will allow the AWS Lambda in the **Lambda AWS Account** to write files to t
 | **EXTERNAL_ROLE_ARN**      | The AWS Role ARN for the IAM Role with access to write to the Security Lake Custom Source S3 bucket     |
 | **EXTERNAL_S3_BUCKET_PARQUET**   | The name of the Custom Source S3 bucket in the **Security Lake AWS Account**          |
 | **REGION**   |  The AWS Region of the AWS Lambda   |
-| **S3_BUCKET_OCSF**   |  The name of the S3 bucket created to store the OCSF events in the **Lambda AWS Account **     |
+| **S3_BUCKET_OCSF**   |  The name of the S3 bucket created to store the OCSF events in the **Lambda AWS Account**     |
 | **SOURCE_LOCATION**   | The Source Location configured in Security Lake during the Custom Source creation.       |
 | **USERNAME**   | The PingOne Webhook basic authentication username        |
 | **PASSWORD**   | The PingOne Webhook basic authentication password        |
