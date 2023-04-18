@@ -36,7 +36,7 @@ The diagram below illustrates the process of converting the PingOne Audit events
     * Create an IAM role with access to the S3 bucket created above.
     * Select Node.js 16.x as the runtime
     * Configure the runtime to have 512MB of memory and 1 minute timeout
-    * Download the index.js and package.json from https://github.com/pingone-davinci/pingone-amazon-security-lake and create a zip deployment package as per the AWS Lambda documentation here (https://docs.aws.amazon.com/lambda/latest/dg/nodejs-package.html)
+    * Download the index.js and package.json from https://github.com/pingone-davinci/pingone-amazon-security-lake.  Run npm install using Node.js 16.x and create a zip deployment package as per the AWS Lambda documentation here (https://docs.aws.amazon.com/lambda/latest/dg/nodejs-package.html)
     
 * From the AWS Console using the **Security Lake AWS Account**:
   * Create a Custom Source within Security Lake for the PingOne Parquet files as per the following guide: https://docs.aws.amazon.com/security-lake/latest/userguide/custom-sources.html
