@@ -40,8 +40,8 @@ The diagram below illustrates the process of converting the PingOne Audit events
     
 * From the AWS Console using the **Security Lake AWS Account**:
   * Create a Custom Source within Security Lake for the PingOne Parquet files as per the following guide: https://docs.aws.amazon.com/security-lake/latest/userguide/custom-sources.html
-  * For the S3 bucket associated with the Custom Source, create an IAM Role and grant Assume Role permission to the **Lambda AWS Account** using a policy as such as: 
-
+  * Use the **Lamba AWS Account** account ID as the Custom Source **AWS account with permission to write data** to Security Lake.
+  * Ensure the policy created for the Role associated with the Custom Source matches the below policy:
 
 ```
 {
