@@ -52,7 +52,7 @@ The diagram below illustrates the process of converting the PingOne Audit events
             "Sid": "1",
             "Effect": "Allow",
             "Principal": {
-                "AWS": "arn:aws:iam::<Lambda AWS Account ID>:root" t
+                "AWS": "arn:aws:iam::<Lambda AWS Account ID>:root"
             },
             "Action": "sts:AssumeRole"
         }
